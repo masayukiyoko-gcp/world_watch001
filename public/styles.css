@@ -1,0 +1,4 @@
+body{font-family:system-ui,Segoe UI,Roboto,'Noto Sans JP',sans-serif;margin:24px}
+.clocks{display:flex;gap:24px}
+.clock{border:1px solid #ddd;padding:16px;border-radius:8px;width:220px;text-align:center}
+.time{font-size:28px;font-weight:600}

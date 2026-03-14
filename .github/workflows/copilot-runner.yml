@@ -35,6 +35,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Start static server for Cypress
+        run: |
+          npx http-server public -p 8080 &
+        env:
+          PORT: 8080
+
       - name: Run unit tests (capture output)
         id: unit
         run: |
