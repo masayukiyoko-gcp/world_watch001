@@ -35,49 +35,73 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests
+      - name: Run unit tests (capture output)
         id: unit
-        run: npm test
+        run: |
+          mkdir -p artifacts || true
+          npm test 2>&1 | tee artifacts/unit-test-output.txt
         continue-on-error: true
 
-      - name: Run Cypress E2E
+      - name: Upload unit test output
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-output
+          path: artifacts/unit-test-output.txt
+
+      - name: Run Cypress E2E (capture output)
         id: cypress
-        run: npx cypress run --headless
+        run: |
+          mkdir -p cypress/results artifacts || true
+          npx cypress run --headless 2>&1 | tee artifacts/cypress-output.txt
         continue-on-error: true
 
-      - name: Mark success
-        if: ${{ steps.unit.conclusion == 'success' && steps.cypress.conclusion == 'success' }}
-        uses: actions/github-script@v6
+      - name: Upload Cypress artifacts
+        uses: actions/upload-artifact@v4
         with:
-          script: |
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: ['copilot/done']
-            });
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `copilot: 自動実行が完了しました。ユニット・E2Eともに成功しました。`
-            });
+          name: cypress-artifacts
+          path: |
+            artifacts/cypress-output.txt
+            cypress/screenshots/**
+            cypress/videos/**
+            cypress/results/**
 
-      - name: Mark failure
-        if: ${{ steps.unit.conclusion != 'success' || steps.cypress.conclusion != 'success' }}
+      - name: Post results and finalize
         uses: actions/github-script@v6
         with:
           script: |
-            const labels = ['copilot/failed'];
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels,
-            });
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `copilot: 自動実行でエラーが発生しました。ログを確認してください。`
-            });
+            const unitSuccess = (typeof steps !== 'undefined' && steps && steps.unit && steps.unit.conclusion === 'success');
+            const cypressSuccess = (typeof steps !== 'undefined' && steps && steps.cypress && steps.cypress.conclusion === 'success');
+            const success = unitSuccess && cypressSuccess;
+            if (success) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: ['copilot/done']
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `copilot: 自動実行が完了しました。ユニット・E2Eともに成功しました。アーティファクトを添付しました。`
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                state: 'closed'
+              });
+            } else {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: ['copilot/failed'],
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `copilot: 自動実行でエラーが発生しました。テストログとスクリーンショットをアーティファクトとして添付しました。`
+              });
+            }
