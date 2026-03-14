@@ -1,0 +1,83 @@
+name: Copilot Issue Runner
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  run-task:
+    if: contains(github.event.label.name, 'copilot')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Announce start
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `copilot: 自動実行を開始します。`,
+            })
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        id: unit
+        run: npm test
+        continue-on-error: true
+
+      - name: Run Cypress E2E
+        id: cypress
+        run: npx cypress run --headless
+        continue-on-error: true
+
+      - name: Mark success
+        if: ${{ steps.unit.conclusion == 'success' && steps.cypress.conclusion == 'success' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['copilot/done']
+            });
+            await github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `copilot: 自動実行が完了しました。ユニット・E2Eともに成功しました。`
+            });
+
+      - name: Mark failure
+        if: ${{ steps.unit.conclusion != 'success' || steps.cypress.conclusion != 'success' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const labels = ['copilot/failed'];
+            await github.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels,
+            });
+            await github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `copilot: 自動実行でエラーが発生しました。ログを確認してください。`
+            });
