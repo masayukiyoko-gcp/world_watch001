@@ -1,0 +1,55 @@
+# Validation Report 1
+
+作成日: 2026-03-15
+
+目的: `docs/spec/spec.md` の要求項目と、現在 GitHub Pages に公開されているコンテンツおよびリポジトリ内実装を照合し、「できたこと」と「できなかったこと」を整理する。
+
+**参照**:
+- 仕様: [docs/spec/spec.md](docs/spec/spec.md)
+- 公開ページ (Pages): https://masayukiyoko-gcp.github.io/world_watch001/
+- 実装/検証対象ファイル: [public/index.html](public/index.html#L1-L200), [src/js/clock.js](src/js/clock.js#L1), [tests/unit/clock.test.js](tests/unit/clock.test.js#L1-L20), [cypress/e2e/app_spec.cy.js](cypress/e2e/app_spec.cy.js#L1-L40), [scripts/screenshot.js](scripts/screenshot.js)
+
+## できたこと
+
+- 静的 Web アプリを `public/` に実装し、GitHub Pages で公開済み（URL: 上記）。
+- 公開ページはローカルサーバと概ね同等に表示されるよう修正済（`public/index.html` の資産参照を相対パスに変更）。
+- 基本的な時刻表示ロジックを `src/js/clock.js` に実装し、単体テスト（`tests/unit/clock.test.js`）を追加済み。現在のユニットテストは動作確認レベルで通過しています。
+- E2E テストフレームワークとして Cypress を導入し、`cypress/e2e/app_spec.cy.js` にて主要要素（UTC / Tokyo の時刻表示）を検証するテストを用意。
+- Playwright を導入し、公開ページのスクリーンショットを取得する `scripts/screenshot.js` をリポジトリに追加済み。
+- リポジトリ管理: `node_modules/` と Pages の生成物（`pages_index.html` / `artifacts/` / `assets/screenshots/`）を `.gitignore` に追加し、生成物を除外する運用を確立。
+- CI/ワークフローは PR にスクリーンショットを要求する方針を含めて追加済み（ワークフロー定義は `.github/workflows/` にあり、表示系の検証手順を導入済）。
+
+## できていないこと（ギャップ）
+
+- 仕様の主要機能の不実装:
+  - アナログ時計表示（仕様はアナログ表示を要求）→ 現状はテキスト形式の HH:MM:SS 表示のみ。
+  - 時計の数を動的に 2〜8 に変更する UI → 未実装（現在は固定で UTC と Tokyo を表示）。
+  - 文字盤の色で昼夜を示す機能 → 未実装。
+  - 都市名の部分一致による候補リストと選択機能 → 未実装。
+  - 多言語対応（日本語・英語・タイ語・インドネシア語）の UI 切替 → 未実装（未整備）。
+
+- テスト網羅性:
+  - 単体テストの条件網羅（C0）・分岐網羅（C1）を要求しているが、現状の単体テストは限定的であり、C0/C1 を満たしていないモジュールが多数存在する。
+  - 表示系のテストは基本的な E2E を用意しているが、スクリーンショット比較や視覚的回帰テストの自動化は限定的／部分的実装にとどまる。
+
+- ドキュメントや運用の未整備点:
+  - 多数の仕様（都市候補のデータソース、i18n の文字列管理方法など）に対する実装方針が未確定で、残作業が多い。
+
+## 推奨アクション（優先度順）
+
+1. コア機能の優先実装: `src/js` と `public/js` に対して、
+   - 都市データの導入（簡易 JSON）と部分一致検索
+   - 時計の動的追加/削除 UI
+   - アナログ表示コンポーネント（既存ライブラリ or Canvas/SVG 実装）
+
+2. テスト強化:
+   - `src/js/clock.js` 等のロジックに対するユニットテストを拡充し、C0/C1 を満たすようにする（カバレッジ測定を CI に導入）。
+   - 表示系についてはスクリーンショット取得 → 差分比較（例: Pixelmatch）を CI に組み込む。
+
+3. i18n 設計: 言語切替のための `locales/` ディレクトリと運用手順を定義する。
+
+4. ドキュメント: `docs/spec` の各要件に対し、現状ステータス（実装／部分実装／未実装）をテーブル化して管理する（次回の validation で追跡）。
+
+---
+
+この検証レポートはリポジトリ内の現状実装（2026-03-15）に基づき作成しました。詳細な差分（ファイルレベルの証跡やテスト出力）が必要であれば追って添付します。
