@@ -1,0 +1,25 @@
+﻿Creating issue: UI wireframe (create)
+https://github.com/masayukiyoko-gcp/world_watch001/issues/1
+Creating issue: City data model design
+https://github.com/masayukiyoko-gcp/world_watch001/issues/2
+Creating issue: Timezone library selection and install
+https://github.com/masayukiyoko-gcp/world_watch001/issues/3
+Creating issue: Clock logic implementation (time calc and day/night)
+https://github.com/masayukiyoko-gcp/world_watch001/issues/4
+Creating issue: Analog clock component (UI)
+https://github.com/masayukiyoko-gcp/world_watch001/issues/5
+Creating issue: Map background and city pins
+https://github.com/masayukiyoko-gcp/world_watch001/issues/6
+Creating issue: Localization (i18n) support
+https://github.com/masayukiyoko-gcp/world_watch001/issues/7
+Creating issue: Add/remove clock feature
+https://github.com/masayukiyoko-gcp/world_watch001/issues/8
+Creating issue: Unit tests for logic (C0/C1 coverage)
+https://github.com/masayukiyoko-gcp/world_watch001/issues/9
+Creating issue: E2E visual tests with Cypress
+https://github.com/masayukiyoko-gcp/world_watch001/issues/10
+Creating issue: CI workflow (tests and coverage)
+https://github.com/masayukiyoko-gcp/world_watch001/issues/11
+Creating issue: Documentation update (specs and env)
+https://github.com/masayukiyoko-gcp/world_watch001/issues/12
+All issues submitted.
